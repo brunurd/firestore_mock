@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:kt_dart/kt.dart';
 import 'package:mockito/mockito.dart';
+import 'package:cloud_firestore_platform_interface/cloud_firestore_platform_interface.dart'
+    as platform;
 
 import '../firestore_mock.dart';
 import 'utils.dart';
@@ -29,22 +31,29 @@ class MockQuery extends Mock implements Query {
   MockQuery(this.firestore, this.data);
 
   @override
-  Future<QuerySnapshot> getDocuments() => Future.value(MockQuerySnapshot(data));
+  Future<QuerySnapshot> getDocuments({
+    Source source = platform.Source.serverAndCache,
+  }) =>
+      Future.value(MockQuerySnapshot(data));
 
-  @override
-  // TODO: Propagate changes
-  Stream<QuerySnapshot> snapshots() => Stream.fromFuture(getDocuments());
+  // @override
+  // // TODO: Propagate changes
+  // Stream<QuerySnapshot> snapshots() => Stream.fromFuture(getDocuments());
 
   @override
   // TODO: WHERE on nested fields
-  Query where(String field,
-      {isEqualTo,
-      isLessThan,
-      isLessThanOrEqualTo,
-      isGreaterThan,
-      isGreaterThanOrEqualTo,
-      arrayContains,
-      bool isNull}) {
+  Query where(
+    field, {
+    isEqualTo,
+    isLessThan,
+    isLessThanOrEqualTo,
+    isGreaterThan,
+    isGreaterThanOrEqualTo,
+    arrayContains,
+    List arrayContainsAny,
+    List whereIn,
+    bool isNull,
+  }) {
     final filteredData = _ktData
         .filter(_isEqualTo(field, isEqualTo))
         .filter(_isLessThan(field, isLessThan))
@@ -69,24 +78,24 @@ class MockQuery extends Mock implements Query {
     }
   }
 
-  Query orderBy(String field, {bool descending = false}) {
-    Map<String, Map<String, dynamic>> sorted;
-    if (!descending) {
-      sorted = _ktData
-          .toList()
-          .sortedWith((p1, p2) => p1.second[field].compareTo(p2.second[field]))
-          .associate((pair) => pair)
-          .asMap();
-    } else {
-      sorted = _ktData
-          .toList()
-          .sortedWith((p1, p2) => p2.second[field].compareTo(p2.second[field]))
-          .associate((pair) => pair)
-          .asMap();
-    }
+  // Query orderBy(String field, {bool descending = false}) {
+  //   Map<String, Map<String, dynamic>> sorted;
+  //   if (!descending) {
+  //     sorted = _ktData
+  //         .toList()
+  //         .sortedWith((p1, p2) => p1.second[field].compareTo(p2.second[field]))
+  //         .associate((pair) => pair)
+  //         .asMap();
+  //   } else {
+  //     sorted = _ktData
+  //         .toList()
+  //         .sortedWith((p1, p2) => p2.second[field].compareTo(p2.second[field]))
+  //         .associate((pair) => pair)
+  //         .asMap();
+  //   }
 
-    return MockQuery(firestore, sorted);
-  }
+  //   return MockQuery(firestore, sorted);
+  // }
 
   QueryPredicate _isEqualTo(String field, isEqualTo) =>
       (entry) => isEqualTo != null ? entry.value[field] == isEqualTo : true;
